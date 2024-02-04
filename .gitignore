@@ -1,0 +1,34 @@
+# Dependency directories
+node_modules/
+dist/
+
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production build files
+/build
+
+# IDE and editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Vue CLI 3 generated files
+/.vuepress/dist
+/.npmrc
+/.nvmrc
+/.yarnrc
