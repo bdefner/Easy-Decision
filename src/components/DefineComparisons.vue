@@ -26,12 +26,26 @@ const pairs = computed(() => {
 const pairResults = ref(pairs.value.map(() => 5)); // Default to the middle value
 
 function submitComparisons() {
-  // Convert each value in pairResults to a number before emitting
-  const numericPairResults = pairResults.value.map((result) =>
-    parseFloat(result),
-  );
-  console.log('numericPairResults :', numericPairResults);
-  emit('updateComparisons', numericPairResults);
+  const ahpPreferenceValues = pairResults.value.map((sliderValue) => {
+    console.log('sliderValue :', sliderValue);
+
+    // Handle the midpoint explicitly
+    if (sliderValue == 5) {
+      // Directly return 1 for equal importance when slider is at midpoint
+      return 1;
+    } else if (sliderValue < 5) {
+      // Adjust logic for values < 5 if necessary
+      return 2 + ((5 - sliderValue) * (9 - 2)) / (5 - 1);
+    } else {
+      // Adjust logic for values > 5 if necessary
+      return 1 / (2 + ((sliderValue - 5) * (9 - 2)) / (5 - 1));
+    }
+  });
+
+  // Ensure the normalization and weight calculation steps correctly interpret these values,
+  // especially handling the case where the comparison value is 1 (equal importance)
+  console.log('AHP Preference Values:', ahpPreferenceValues);
+  emit('updateComparisons', ahpPreferenceValues);
 }
 </script>
 
@@ -43,8 +57,8 @@ function submitComparisons() {
       :key="index"
       class="comparison"
     >
-      <div>{{ pair[0] }} vs {{ pair[1] }}</div>
       <div class="slider-container">
+        {{ pair[0] }}
         <input
           type="range"
           v-model="pairResults[index]"
@@ -52,7 +66,7 @@ function submitComparisons() {
           max="9"
           step="0.1"
         />
-        <div>Preference: {{ pairResults[index] }}</div>
+        {{ pair[1] }}
       </div>
     </div>
     <button @click="submitComparisons">Submit Comparisons</button>

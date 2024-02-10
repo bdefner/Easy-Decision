@@ -9,10 +9,10 @@ import ResultsSlide from './ResultsSlide.vue';
 
 const question = ref('');
 let criteria = reactive([]);
-let alternatives = reactive([]);
+let alternatives = ref([]);
 let allDone = ref(false);
 
-let criteriaComparisons = reactive({});
+let criteriaComparisons = ref({});
 const alternativesComparisons = reactive([]);
 
 const currentSlide = ref(0);
@@ -39,13 +39,62 @@ function updateAlternatives(updatedAlternatives) {
 }
 
 function updateCriteriaComparisons(updatedComparisons) {
-  criteriaComparisons = updatedComparisons;
-  console.log('criteriaComparisons :', criteriaComparisons);
+  // Assuming 'criteria' is a reactive ref and accessing its value directly
+  let comparisonIndex = 0;
+  criteriaComparisons.value = {}; // Ensure this is a ref to an object for reactivity
+
+  for (let i = 0; i < criteria.value.length; i++) {
+    for (let j = i + 1; j < criteria.value.length; j++) {
+      const forwardKey = `${criteria.value[i]}:${criteria.value[j]}`;
+      const backwardKey = `${criteria.value[j]}:${criteria.value[i]}`;
+      const comparisonValue = updatedComparisons[comparisonIndex];
+
+      criteriaComparisons.value[forwardKey] = comparisonValue;
+      criteriaComparisons.value[backwardKey] = 1 / comparisonValue;
+
+      comparisonIndex++;
+    }
+  }
 }
 
 function updateAlternativesComparisons(updatedComparisons, criterion) {
-  alternativesComparisons[criterion] = updatedComparisons;
-  console.log('alternativesComparisons :', alternativesComparisons);
+  // Assuming 'alternatives' is a ref, directly access its value
+  const altArray = alternatives.value; // Direct access for Vue 3 ref
+
+  const pairs = [];
+  for (let i = 0; i < altArray.length; i++) {
+    for (let j = i + 1; j < altArray.length; j++) {
+      pairs.push(`${altArray[i]}:${altArray[j]}`);
+    }
+  }
+
+  // Construct the comparison object using the pairs
+  const comparisonObject = pairs.reduce((acc, pair, index) => {
+    if (index < updatedComparisons.length) {
+      acc[pair] = parseFloat(updatedComparisons[index]); // Convert to float to ensure numeric comparison
+    }
+    return acc;
+  }, {});
+
+  // Directly update the alternativesComparisons reactive property
+  // No need for Vue.set in Vue 3 when using reactive or ref
+  alternativesComparisons[criterion] = comparisonObject;
+
+  console.log('Updated alternativesComparisons:', alternativesComparisons);
+}
+
+function toggleAllDone() {
+  allDone.value = !allDone.value;
+  console.log(
+    'criteria :',
+    criteria,
+    'alternatives :',
+    alternatives,
+    'criteriaComparisons :',
+    criteriaComparisons,
+    'alternativesComparisons :',
+    alternativesComparisons,
+  );
 }
 </script>
 
@@ -81,7 +130,7 @@ function updateAlternativesComparisons(updatedComparisons, criterion) {
         "
       />
     </div>
-    <button @click="allDone = true">All done</button>
+    <button @click="toggleAllDone">All done</button>
     <ResultsSlide
       v-if="allDone"
       :question="question"
