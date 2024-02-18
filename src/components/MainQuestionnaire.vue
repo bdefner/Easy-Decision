@@ -1,10 +1,9 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
 import DefineAlternatives from './DefineAlternatives.vue';
 import DefineComparisons from './DefineComparisons.vue';
 import DefineCriteria from './DefineCriteria.vue';
 import DefineQuestion from './DefineQuestion.vue';
-import QuestionnaireNavigation from './QuestionnaireNavigation.vue';
 import ResultsSlide from './ResultsSlide.vue';
 
 const question = ref('');
@@ -15,18 +14,37 @@ let allDone = ref(false);
 let criteriaComparisons = ref({});
 const alternativesComparisons = reactive([]);
 
-const currentSlide = ref(0);
+let currentSlide = ref(0);
+let dynamicSlideIndex = ref(0);
 
 const handleQuestionUpdate = (updatedQuestion) => {
   question.value = updatedQuestion;
 };
 
-onMounted(() => {
-  console.log('criteria :', criteria);
-});
-
-function updateSlide(newSlide) {
-  currentSlide.value = newSlide;
+function updateSlide(direction) {
+  console.log('direction :', direction);
+  if (direction === 'next') {
+    if (currentSlide.value === 4) {
+      if (dynamicSlideIndex.value < criteria.value.length - 1) {
+        // Move to the next dynamic slide
+        dynamicSlideIndex.value++;
+      } else {
+        // All dynamic slides are done, move to the next static slide or finish
+        currentSlide.value++;
+        // dynamicSlideIndex.value = 0; // Reset for future navigation if needed
+      }
+    } else {
+      currentSlide.value++;
+    }
+  } else if (direction === 'prev') {
+    if (currentSlide.value === 3 && dynamicSlideIndex.value > 0) {
+      // Move to the previous dynamic slide
+      dynamicSlideIndex.value--;
+    } else {
+      // Move to the previous static slide, if not at the beginning
+      if (currentSlide.value > 0) currentSlide.value--;
+    }
+  }
 }
 
 function updateCriteria(updatedCriteria) {
@@ -85,50 +103,51 @@ function updateAlternativesComparisons(updatedComparisons, criterion) {
 
 function toggleAllDone() {
   allDone.value = !allDone.value;
-  console.log(
-    'criteria :',
-    criteria,
-    'alternatives :',
-    alternatives,
-    'criteriaComparisons :',
-    criteriaComparisons,
-    'alternativesComparisons :',
-    alternativesComparisons,
-  );
 }
 </script>
 
 <template>
   <div>
     <DefineQuestion
-      @questionUpdated="handleQuestionUpdate"
       v-if="currentSlide === 0"
+      @questionUpdated="handleQuestionUpdate"
+      @update-slide="updateSlide"
     />
     <DefineCriteria
+      v-if="currentSlide === 1"
       :criteria="criteria"
       @updateCriteria="updateCriteria"
+      @update-slide="updateSlide"
     />
     <DefineAlternatives
+      v-if="currentSlide === 2"
       :alternatives="alternatives"
       @updateAlternatives="updateAlternatives"
+      @update-slide="updateSlide"
     />
     <DefineComparisons
+      v-if="currentSlide === 3"
       :items="criteria"
       label="Criteria Comparison"
       @update-comparisons="updateCriteriaComparisons"
+      @update-slide="updateSlide"
     />
-    <div
-      v-for="(criterion, index) in criteria"
-      :key="index"
-    >
-      <DefineComparisons
-        :items="alternatives"
-        :label="`Compare alternatives for ${criterion}`"
-        @update-comparisons="
-          (updatedComparisons) =>
-            updateAlternativesComparisons(updatedComparisons, criterion)
-        "
-      />
+    <div v-if="currentSlide === 4">
+      <div
+        v-for="(criterion, index) in criteria"
+        :key="index"
+      >
+        <DefineComparisons
+          v-if="index === dynamicSlideIndex"
+          :items="alternatives"
+          :label="`Compare alternatives for ${criterion}`"
+          @update-slide="updateSlide"
+          @update-comparisons="
+            (updatedComparisons) =>
+              updateAlternativesComparisons(updatedComparisons, criterion)
+          "
+        />
+      </div>
     </div>
     <button @click="toggleAllDone">All done</button>
     <ResultsSlide
@@ -138,10 +157,6 @@ function toggleAllDone() {
       :alternatives="alternatives"
       :criteria-comparisons="criteriaComparisons"
       :alternatives-comparisons="alternativesComparisons"
-    />
-    <QuestionnaireNavigation
-      :currentSlide="currentSlide"
-      @updateSlide="updateSlide"
     />
   </div>
 </template>

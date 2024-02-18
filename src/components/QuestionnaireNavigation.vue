@@ -1,19 +1,26 @@
 <script setup>
-import { defineEmits, defineProps } from 'vue';
-
-const props = defineProps({
-  currentSlide: Number,
-});
+import { defineEmits } from 'vue';
+import MainButton from './MainButton.vue';
 
 const emit = defineEmits(['updateSlide']);
+
+function updateSlide(newSlide) {
+  emit('updateSlide', newSlide);
+}
 </script>
 <template>
-  <div>
-    <button @click.prevent="emit('updateSlide', props.currentSlide - 1)">
-      previous
-    </button>
-    <button @click.prevent="emit('updateSlide', props.currentSlide + 1)">
-      next
-    </button>
+  <div class="flex justify-center w-full my-5">
+    <MainButton
+      label="previous"
+      on-click-emit="prev"
+      icon-left="ChevronLeftIcon"
+      @clicked="updateSlide($event)"
+    />
+    <MainButton
+      label="next"
+      on-click-emit="next"
+      icon-right="ChevronRightIcon"
+      @clicked="updateSlide($event)"
+    />
   </div>
 </template>

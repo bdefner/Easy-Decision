@@ -1,7 +1,8 @@
 <script setup>
 import { computed, defineEmits, defineProps, ref } from 'vue';
+import QuestionnaireNavigation from './QuestionnaireNavigation.vue';
 
-const emit = defineEmits(['updateComparisons']);
+const emit = defineEmits(['updateComparisons', 'updateSlide']);
 
 const props = defineProps({
   items: Array,
@@ -25,10 +26,14 @@ const pairs = computed(() => {
 // Initialize results for each pair
 const pairResults = ref(pairs.value.map(() => 5)); // Default to the middle value
 
+function updateSlide(newSlide) {
+  console.log('newSlide in Define Comp :', newSlide);
+  submitComparisons();
+  emit('updateSlide', newSlide);
+}
+
 function submitComparisons() {
   const ahpPreferenceValues = pairResults.value.map((sliderValue) => {
-    console.log('sliderValue :', sliderValue);
-
     // Handle the midpoint explicitly
     if (sliderValue == 5) {
       // Directly return 1 for equal importance when slider is at midpoint
@@ -44,13 +49,12 @@ function submitComparisons() {
 
   // Ensure the normalization and weight calculation steps correctly interpret these values,
   // especially handling the case where the comparison value is 1 (equal importance)
-  console.log('AHP Preference Values:', ahpPreferenceValues);
   emit('updateComparisons', ahpPreferenceValues);
 }
 </script>
 
 <template>
-  <div>
+  <div class="slide_wrap">
     <h2>{{ props.label }}</h2>
     <div
       v-for="(pair, index) in pairs"
@@ -69,7 +73,10 @@ function submitComparisons() {
         {{ pair[1] }}
       </div>
     </div>
-    <button @click="submitComparisons">Submit Comparisons</button>
+    <QuestionnaireNavigation
+      :currentSlide="currentSlide"
+      @updateSlide="updateSlide"
+    />
   </div>
 </template>
 

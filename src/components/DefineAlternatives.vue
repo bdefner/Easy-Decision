@@ -1,5 +1,7 @@
 <script setup>
 import { defineEmits, defineProps, ref } from 'vue';
+import MainButton from './MainButton.vue';
+import QuestionnaireNavigation from './QuestionnaireNavigation.vue';
 
 const props = defineProps({
   alternatives: Array,
@@ -7,7 +9,7 @@ const props = defineProps({
 
 const alternativesMutation = ref(props.alternatives);
 
-const emit = defineEmits(['updateAlternatives']);
+const emit = defineEmits(['updateAlternatives', 'updateSlide']);
 
 // onMounted(() => {
 //   console.log('criteria :', props.criteria);
@@ -17,12 +19,13 @@ function addAlternative() {
   alternativesMutation.value.push('');
 }
 
-function save() {
+function updateSlide(newSlide) {
   emit('updateAlternatives', alternativesMutation);
+  emit('updateSlide', newSlide);
 }
 </script>
 <template>
-  <div>
+  <div class="slide_wrap">
     <h2>Define Your Alternatives</h2>
     <div
       v-for="(alternative, index) in alternativesMutation"
@@ -31,9 +34,17 @@ function save() {
       <input
         v-model="alternativesMutation[index]"
         :placeholder="`Alternative ${index + 1}`"
+        class="text-center"
       />
     </div>
-    <button @click="addAlternative">Add Alternative</button>
-    <button @click.prevent="save">Save</button>
+    <MainButton
+      label="add alternative"
+      icon-left="PlusCircleIcon"
+      @clicked="addAlternative()"
+    />
+    <QuestionnaireNavigation
+      :currentSlide="currentSlide"
+      @updateSlide="updateSlide"
+    />
   </div>
 </template>

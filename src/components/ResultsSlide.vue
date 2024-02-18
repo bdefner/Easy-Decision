@@ -1,5 +1,7 @@
 <script setup>
-import { computed, defineProps, watch } from 'vue';
+import Chart from 'chart.js/auto';
+import { computed, defineProps, onMounted, ref, watch } from 'vue';
+import QuestionnaireNavigation from './QuestionnaireNavigation.vue';
 
 const props = defineProps({
   alternativesComparisons: Object,
@@ -9,14 +11,6 @@ const props = defineProps({
   alternatives: Array,
 });
 
-// Mock data for debugging
-// const mockCriteriaComparisons = {
-//   'criteria1:criteria2': 3, // criteria1 is three times as important as criteria2
-//   'criteria2:criteria1': 1 / 3,
-// };
-
-// const mockCriteria = ['criteria1', 'criteria2'];
-
 watch(
   () => props.alternativesComparisons,
   (alternativesComparisons) => {
@@ -24,39 +18,95 @@ watch(
   },
 );
 
-// Utility to ensure comparison keys are consistent
-// const generateComparisonKey = (item1, item2) => `${item1}:${item2}`;
+const overallPreferenceChart = ref(null);
+const criteriaWeightsChart = ref(null);
 
-// Correctly handle the computation of normalized matrices and weights
-// function computeNormalizedMatrixAndWeights(comparisons, items) {
-//   console.log('items :', items);
-//   console.log('comparisons :', comparisons);
-//   let matrix = items.map(() => new Array(items.length).fill(0));
-//   let sumColumns = new Array(items.length).fill(0);
+onMounted(() => {
+  const overallCtx = document
+    .getElementById('overallPreferenceChart')
+    .getContext('2d');
 
-//   items.forEach((item1, i) => {
-//     items.forEach((item2, j) => {
-//       if (i === j) {
-//         matrix[i][j] = 1; // Diagonal is always 1
-//       } else {
-//         const key = generateComparisonKey(item1, item2);
-//         const reverseKey = generateComparisonKey(item2, item1);
-//         matrix[i][j] = comparisons[key] || 1 / comparisons[reverseKey] || 1;
-//       }
-//       sumColumns[j] += matrix[i][j];
-//     });
-//   });
+  overallPreferenceChart.value = new Chart(overallCtx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(overallPreference.value),
+      datasets: [
+        {
+          label: 'Overall Preference',
+          data: Object.values(overallPreference.value).map(
+            (score) => score * 100,
+          ),
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            // Add more colors as needed
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            // Add more border colors as needed
+          ],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Overall Preference for "' + props.question + '"',
+        },
+      },
+    },
+  });
 
-//   // Normalize the matrix
-//   matrix = matrix.map((row) => row.map((value, j) => value / sumColumns[j]));
-
-//   // Calculate weights
-//   const weights = matrix.map(
-//     (row) => row.reduce((sum, value) => sum + value, 0) / items.length,
-//   );
-
-//   return { normalizedMatrix: matrix, weights };
-// }
+  const criteriaCtx = document
+    .getElementById('criteriaWeightsChart')
+    .getContext('2d');
+  criteriaWeightsChart.value = new Chart(criteriaCtx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(criteriaWeights.value), // Assuming criteriaWeights is an object
+      datasets: [
+        {
+          label: 'Criteria Weights',
+          data: Object.values(criteriaWeights.value).map(
+            (weight) => weight * 100,
+          ),
+          backgroundColor: [
+            // Define colors for each slice
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            // Add more colors as needed
+          ],
+          borderColor: [
+            // Define border colors for each slice
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            // Add more border colors as needed
+          ],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Criteria Weights for "' + props.question + '"',
+        },
+      },
+    },
+  });
+});
 
 function computeNormalizedMatrixAndWeightsTest(comparisonsObject, items) {
   console.log('comparisonsObject :', comparisonsObject);
@@ -200,7 +250,7 @@ const overallPreference = computed(() => {
 </script>
 
 <template>
-  <div>
+  <div class="slide_wrap">
     <h2>Results for "{{ question }}"</h2>
     <h3>Criteria Weights</h3>
     <ul>
@@ -234,6 +284,18 @@ const overallPreference = computed(() => {
       >
         {{ alternative }}: {{ (score * 100).toFixed(2) }}%
       </li>
+      <canvas
+        id="overallPreferenceChart"
+        class="overallPie"
+      ></canvas>
+      <canvas
+        id="criteriaWeightsChart"
+        class="weightsPie"
+      ></canvas>
     </ul>
+    <QuestionnaireNavigation
+      :currentSlide="currentSlide"
+      @updateSlide="updateSlide"
+    />
   </div>
 </template>
