@@ -1,14 +1,17 @@
 <template>
-  <MainQuestionnaire />
+  <div id="app">
+    <SiteNavigation />
+    <router-view />
+  </div>
 </template>
 
 <script>
-import MainQuestionnaire from './components/MainQuestionnaire.vue';
+import SiteNavigation from './components/SiteNavigation.vue';
 
 export default {
   name: 'App',
   components: {
-    MainQuestionnaire,
+    SiteNavigation,
   },
 };
 </script>

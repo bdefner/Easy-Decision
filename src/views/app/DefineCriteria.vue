@@ -1,6 +1,6 @@
 <script setup>
 import { defineEmits, defineProps, ref } from 'vue';
-import MainButton from './MainButton.vue';
+import MainButton from '../../components/MainButton.vue';
 import QuestionnaireNavigation from './QuestionnaireNavigation.vue';
 
 const props = defineProps({
